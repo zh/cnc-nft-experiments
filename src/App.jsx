@@ -1,107 +1,59 @@
-import React, { useEffect, useState } from "react";
-import './styles/App.css';
-import twitterLogo from './assets/twitter-logo.svg';
+import { useEffect, useMemo, useState } from 'react';
 
-// Constants
-const TWITTER_HANDLE = 'zh';
-const TWITTER_LINK = `https://twitter.com/${TWITTER_HANDLE}`;
+// import thirdweb
+import { UnsupportedChainIdError } from "@web3-react/core";
+import { useWeb3 } from "@3rdweb/hooks";
+import { ThirdwebSDK } from "@3rdweb/sdk";
+
+const sdk = new ThirdwebSDK();
 
 const App = () => {
-  const [currentAccount, setCurrentAccount] = useState("");
-  
-  const checkIfWalletIsConnected = async () => {
-    const { ethereum } = window;
+  // Use the connectWallet hook thirdweb gives us.
+  const { connectWallet, address, error, provider } = useWeb3();
+  console.log("ETH Address:", address);
 
-    if (!ethereum) {
-      console.log("Make sure you have metamask!");
-      return;
-    } else {
-      console.log("We have the ethereum object", ethereum);
-    }
-
-    const accounts = await ethereum.request({ method: 'eth_accounts' });
-
-    if (accounts.length !== 0) {
-      const account = accounts[0];
-      console.log("Found an authorized account:", account);
-      setCurrentAccount(account)
-    } else {
-      console.log("No authorized account found")
-    }
-  }
-
-  /*
-  * Implement your connectWallet method here
-  */
-  const connectWallet = async () => {
-    try {
-      const { ethereum } = window;
-
-      if (!ethereum) {
-        alert("Get MetaMask!");
-        return;
-      }
-
-      /*
-      * Fancy method to request access to account.
-      */
-      const accounts = await ethereum.request({ method: "eth_requestAccounts" });
-
-      /*
-      * Boom! This should print out public address once we authorize Metamask.
-      */
-      console.log("Connected", accounts[0]);
-      setCurrentAccount(accounts[0]); 
-    } catch (error) {
-      console.log(error)
-    }
-  }
-
-  // Render Methods
-  const renderNotConnectedContainer = () => (
-    <button onClick={connectWallet} className="cta-button connect-wallet-button">
-      Connect to Wallet
-    </button>
-  );
+  // The signer is required to sign transactions on the blockchain.
+  // Without it we can only read data, not write.
+  const signer = provider ? provider.getSigner() : undefined;
 
   useEffect(() => {
-    checkIfWalletIsConnected();
-  }, [])
+    // We pass the signer to the sdk, which enables us to interact with
+    // our deployed contract!
+    sdk.setProviderOrSigner(signer);
+  }, [signer]);
 
-  /*
-  * Added a conditional render! We don't want to show Connect to Wallet if we're already conencted :).
-  */
-  return (
-    <div className="App">
-      <div className="container">
-        <div className="header-container">
-          <p className="header gradient-text">Crypto and Code</p>
-          <p className="sub-text">
-            Roots Up live stream project.
-          </p>
-          {currentAccount === "" ? (
-            renderNotConnectedContainer()
-          ) : (
-            <>
-              <h2 className="sub-text">Account: {currentAccount}</h2>
-              <button onClick={null} className="cta-button connect-wallet-button">
-                Mint NFT
-              </button>
-            </>
-          )}
-        </div>
-        <div className="footer-container">
-          <img alt="Twitter Logo" className="twitter-logo" src={twitterLogo} />
-          <a
-            className="footer-text"
-            href={TWITTER_LINK}
-            target="_blank"
-            rel="noreferrer"
-          >{`built on @${TWITTER_HANDLE}`}</a>
-        </div>
+  if (error instanceof UnsupportedChainIdError ) {
+    return (
+      <div className="unsupported-network">
+        <h2>Please connect to Rinkeby Testnet</h2>
+        <p>
+          This dapp only works on the Rinkeby network, please switch networks
+          in your connected wallet.
+        </p>
       </div>
-    </div>
-  );
+    );
+  }
+
+  // This is the case where the user hasn't connected their wallet
+  // to your web app. Let them call connectWallet.
+  if (!address) {
+    return (
+      <div className="landing">
+        <h1>Crypto and Code</h1>
+        <button onClick={() => connectWallet("injected")} className="btn-hero">
+          Connect your wallet
+        </button>
+      </div>
+    );
+  }
+  
+  // This is the case where we have the user's address
+  // which means they've connected their wallet to our site!
+  return (
+    <div className="landing">
+      <h1>Wallet connected!</h1>
+      <div>Address: {address}</div>
+    </div>);
 };
 
 export default App;
