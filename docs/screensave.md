@@ -52,3 +52,21 @@ Starting airdrop...
 Your app address is: 0xB9A1aD8B7fD6E124825A6b07A392997b6A247c76
 Successfully airdropped tokens to all the holders of the NFT!
 ```
+
+```sh
+$ node ./scripts/8-deploy-vote.js
+Your app address is: 0x5A42E14Cc6b6387DCe8C78A39eed926dfeC917B1
+Successfully deployed vote module, address:  0x6eA03013db6331A45E89b22349a48e5c0db0503d
+```
+
+```sh
+$ node ./scripts/9-setup-vote.js
+Your app address is: 0x5A42E14Cc6b6387DCe8C78A39eed926dfeC917B1
+Successfully gave vote module permissions to act on token module
+```
+
+```sh
+$ node ./scripts/10-create-vote-proposal.js
+Your app address is: 0x5A42E14Cc6b6387DCe8C78A39eed926dfeC917B1
+Successfully created proposal for reward.
+```
